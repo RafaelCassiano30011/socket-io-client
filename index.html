@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Socket.IO Tester v3</title>
+
+    <!-- Socket.IO client -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+    <!-- CodeMirror CSS & JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/theme/idea.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/javascript/javascript.min.js"></script>
+
+    <style>
+      body {
+        font-family: sans-serif;
+        max-width: 800px;
+        margin: 20px auto;
+      }
+      input,
+      button {
+        width: 100%;
+        margin-bottom: 10px;
+        padding: 8px;
+        font-size: 14px;
+      }
+      .CodeMirror {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        height: auto;
+        max-height: 300px;
+      }
+      #log {
+        white-space: pre-wrap;
+        background: #111;
+        color: #0f0;
+        padding: 10px;
+        height: 200px;
+        overflow-y: auto;
+        font-family: monospace;
+      }
+      .event-block {
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-bottom: 10px;
+        background: #f7f7f7;
+        border-radius: 8px;
+      }
+      .flex {
+        display: flex;
+        gap: 10px;
+      }
+      .flex > * {
+        flex: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🧪 Socket.IO Tester v3</h1>
+
+    <label>🔌 URL do servidor (ex: http://localhost:3000)</label>
+    <input id="url" placeholder="http://localhost:3000" value="http://localhost:3000" />
+    <button onclick="connectSocket()">Conectar</button>
+
+    <h2>🎯 Eventos</h2>
+    <div id="events"></div>
+    <button onclick="addEvent()">+ Adicionar evento</button>
+
+    <h3>📜 Log</h3>
+    <div id="log"></div>
+
+    <script>
+      let socket;
+      let eventsState = [];
+
+      function log(text) {
+        const logDiv = document.getElementById("log");
+        logDiv.textContent += `${text}\n`;
+        logDiv.scrollTop = logDiv.scrollHeight;
+      }
+
+      function connectSocket() {
+        const url = document.getElementById("url").value;
+        socket = io(url);
+
+        log(`🔌 Conectando a ${url}...`);
+
+        socket.on("connect", () => {
+          log("✅ Conectado com ID: " + socket.id);
+        });
+
+        socket.onAny((event, data) => {
+          log(`📥 Recebido -> ${event}: ${JSON.stringify(data)}`);
+        });
+
+        socket.on("disconnect", () => {
+          log("❌ Desconectado");
+        });
+      }
+
+      function saveEventsToLocalStorage() {
+        const eventsDiv = document.getElementById("events");
+        const blocks = [...eventsDiv.querySelectorAll(".event-block")];
+
+        const data = blocks.map((block) => {
+          const name = block.querySelector(".event-name").value;
+          const editor = block.querySelector(".json-editor").CodeMirror;
+          const payload = editor.getValue();
+          return { name, payload };
+        });
+
+        localStorage.setItem("socketio_events", JSON.stringify(data));
+      }
+
+      function addEvent(name = "", payload = '{\n  "texto": "teste"\n}') {
+        const eventsDiv = document.getElementById("events");
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "event-block";
+
+        wrapper.innerHTML = `
+        <label>Nome do evento</label>
+        <input type="text" class="event-name" placeholder="ex: mensagem" value="${name}" />
+  
+        <label>Payload (JSON)</label>
+        <div class="json-editor" style="height: 150px;"></div>
+  
+        <div class="flex">
+          <button onclick="emitThisEvent(this)">Emitir</button>
+          <button onclick="removeEvent(this)">Remover</button>
+        </div>
+      `;
+
+        eventsDiv.appendChild(wrapper);
+
+        const editorEl = wrapper.querySelector(".json-editor");
+        const editor = CodeMirror(editorEl, {
+          value: payload,
+          mode: "application/json",
+          theme: "idea",
+          lineNumbers: true,
+          lineWrapping: true,
+          tabSize: 2,
+        });
+
+        editor.on("change", () => saveEventsToLocalStorage());
+        wrapper.querySelector(".event-name").addEventListener("input", () => saveEventsToLocalStorage());
+
+        editorEl.CodeMirror = editor;
+        saveEventsToLocalStorage();
+      }
+
+      function emitThisEvent(btn) {
+        const block = btn.closest(".event-block");
+        const eventName = block.querySelector(".event-name").value;
+        const editor = block.querySelector(".json-editor").CodeMirror;
+        const payloadText = editor.getValue();
+
+        try {
+          const payload = JSON.parse(payloadText);
+          socket.emit(eventName, payload);
+          log(`📤 Emitido -> ${eventName}: ${JSON.stringify(payload)}`);
+        } catch (err) {
+          log(`❗ JSON inválido: ${err.message}`);
+        }
+      }
+
+      function removeEvent(btn) {
+        const block = btn.closest(".event-block");
+        block.remove();
+        saveEventsToLocalStorage();
+      }
+
+      window.onload = () => {
+        const saved = localStorage.getItem("socketio_events");
+        if (saved) {
+          try {
+            const events = JSON.parse(saved);
+            events.forEach((ev) => addEvent(ev.name, ev.payload));
+          } catch (err) {
+            log("⚠️ Erro ao carregar eventos salvos.");
+            addEvent();
+          }
+        } else {
+          addEvent();
+        }
+      };
+    </script>
+  </body>
+</html>
