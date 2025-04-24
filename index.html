@@ -1,192 +1,163 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Socket.IO Tester v3</title>
+<head>
+  <meta charset="UTF-8" />
+  <title>Socket.IO Tester</title>
 
-    <!-- Socket.IO client -->
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <!-- TailwindCSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- CodeMirror CSS & JS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/theme/idea.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/javascript/javascript.min.js"></script>
+  <!-- Socket.IO -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
-    <style>
-      body {
-        font-family: sans-serif;
-        max-width: 800px;
-        margin: 20px auto;
-      }
-      input,
-      button {
-        width: 100%;
-        margin-bottom: 10px;
-        padding: 8px;
-        font-size: 14px;
-      }
-      .CodeMirror {
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        height: auto;
-        max-height: 300px;
-      }
-      #log {
-        white-space: pre-wrap;
-        background: #111;
-        color: #0f0;
-        padding: 10px;
-        height: 200px;
-        overflow-y: auto;
-        font-family: monospace;
-      }
-      .event-block {
-        border: 1px solid #ccc;
-        padding: 10px;
-        margin-bottom: 10px;
-        background: #f7f7f7;
-        border-radius: 8px;
-      }
-      .flex {
-        display: flex;
-        gap: 10px;
-      }
-      .flex > * {
-        flex: 1;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>🧪 Socket.IO Tester v3</h1>
+  <!-- CodeMirror -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/edit/matchbrackets.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/edit/closebrackets.min.js"></script>
 
-    <label>🔌 URL do servidor (ex: http://localhost:3000)</label>
-    <input id="url" placeholder="http://localhost:3000" value="http://localhost:3000" />
-    <button onclick="connectSocket()">Conectar</button>
+  <style>
+    body {
+      background-color: #0f172a;
+      color: #e2e8f0;
+    }
+    .CodeMirror {
+      height: auto;
+      background: #1e293b;
+      color: #e2e8f0;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body class="p-4 max-w-5xl mx-auto font-sans space-y-6">
+  <h1 class="text-3xl font-bold text-blue-400">🔌 Socket.IO Tester</h1>
 
-    <h2>🎯 Eventos</h2>
-    <div id="events"></div>
-    <button onclick="addEvent()">+ Adicionar evento</button>
+  <!-- Conexão -->
+  <div class="space-y-2">
+    <label class="block text-sm font-medium">URL do servidor</label>
+    <input id="url" class="w-full p-2 rounded bg-slate-800 border border-slate-600" placeholder="http://localhost:3000" value="http://localhost:3000" />
+    <button onclick="connectSocket()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded">Conectar</button>
+  </div>
 
-    <h3>📜 Log</h3>
-    <div id="log"></div>
+  <!-- Eventos -->
+  <div class="space-y-4">
+    <h2 class="text-xl font-semibold text-green-400">🎯 Eventos</h2>
+    <div id="events" class="grid gap-4"></div>
+    <button onclick="addEvent()" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded">+ Adicionar evento</button>
+  </div>
 
-    <script>
-      let socket;
-      let eventsState = [];
+  <!-- Log -->
+  <div>
+    <h3 class="text-lg font-semibold text-yellow-300">📜 Log</h3>
+    <div id="log" class="bg-black text-green-300 p-4 rounded h-56 overflow-y-auto font-mono text-sm"></div>
+  </div>
 
-      function log(text) {
-        const logDiv = document.getElementById("log");
-        logDiv.textContent += `${text}\n`;
-        logDiv.scrollTop = logDiv.scrollHeight;
-      }
+  <script>
+    let socket;
 
-      function connectSocket() {
-        const url = document.getElementById("url").value;
-        socket = io(url);
+    function log(text) {
+      const logDiv = document.getElementById("log");
+      logDiv.textContent += `${text}\n`;
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
 
-        log(`🔌 Conectando a ${url}...`);
+    function connectSocket() {
+      const url = document.getElementById("url").value;
+      socket = io(url);
 
-        socket.on("connect", () => {
-          log("✅ Conectado com ID: " + socket.id);
-        });
+      log(`🔌 Conectando a ${url}...`);
 
-        socket.onAny((event, data) => {
-          log(`📥 Recebido -> ${event}: ${JSON.stringify(data)}`);
-        });
+      socket.on("connect", () => log("✅ Conectado com ID: " + socket.id));
+      socket.onAny((event, data) => log(`📥 ${event}: ${JSON.stringify(data)}`));
+      socket.on("disconnect", () => log("❌ Desconectado"));
+    }
 
-        socket.on("disconnect", () => {
-          log("❌ Desconectado");
-        });
-      }
+    function saveEventsToLocalStorage() {
+      const blocks = [...document.querySelectorAll(".event-block")];
+      const data = blocks.map(block => {
+        const name = block.querySelector(".event-name").value;
+        const payload = block.querySelector(".json-editor").CodeMirror.getValue();
+        return { name, payload };
+      });
+      localStorage.setItem("socketio_events", JSON.stringify(data));
+    }
 
-      function saveEventsToLocalStorage() {
-        const eventsDiv = document.getElementById("events");
-        const blocks = [...eventsDiv.querySelectorAll(".event-block")];
+    function addEvent(name = "", payload = '{ "texto": "teste" }') {
+      const wrapper = document.createElement("div");
+      wrapper.className = "event-block bg-slate-800 p-4 rounded space-y-2 border border-slate-700";
 
-        const data = blocks.map((block) => {
-          const name = block.querySelector(".event-name").value;
-          const editor = block.querySelector(".json-editor").CodeMirror;
-          const payload = editor.getValue();
-          return { name, payload };
-        });
+      wrapper.innerHTML = `
+        <label class="block text-sm font-medium">Nome do evento</label>
+        <input type="text" class="event-name w-full p-2 rounded bg-slate-700 border border-slate-600" placeholder="ex: mensagem" value="${name}" />
 
-        localStorage.setItem("socketio_events", JSON.stringify(data));
-      }
-
-      function addEvent(name = "", payload = '{\n  "texto": "teste"\n}') {
-        const eventsDiv = document.getElementById("events");
-
-        const wrapper = document.createElement("div");
-        wrapper.className = "event-block";
-
-        wrapper.innerHTML = `
-        <label>Nome do evento</label>
-        <input type="text" class="event-name" placeholder="ex: mensagem" value="${name}" />
-  
-        <label>Payload (JSON)</label>
+        <label class="block text-sm font-medium">Payload (JSON)</label>
         <div class="json-editor" style="height: 150px;"></div>
-  
-        <div class="flex">
-          <button onclick="emitThisEvent(this)">Emitir</button>
-          <button onclick="removeEvent(this)">Remover</button>
+
+        <div class="flex gap-2 pt-2">
+          <button onclick="emitThisEvent(this)" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-1 rounded">Emitir</button>
+          <button onclick="removeEvent(this)" class="bg-red-600 hover:bg-red-500 text-white px-4 py-1 rounded">Remover</button>
         </div>
       `;
 
-        eventsDiv.appendChild(wrapper);
+      document.getElementById("events").appendChild(wrapper);
 
-        const editorEl = wrapper.querySelector(".json-editor");
-        const editor = CodeMirror(editorEl, {
-          value: payload,
-          mode: "application/json",
-          theme: "idea",
-          lineNumbers: true,
-          lineWrapping: true,
-          tabSize: 2,
-        });
+      let formattedPayload = payload;
+      try {
+        formattedPayload = JSON.stringify(JSON.parse(payload), null, 2);
+      } catch {}
 
-        editor.on("change", () => saveEventsToLocalStorage());
-        wrapper.querySelector(".event-name").addEventListener("input", () => saveEventsToLocalStorage());
+      const editor = CodeMirror(wrapper.querySelector(".json-editor"), {
+        value: formattedPayload,
+        mode: "application/json",
+        theme: "default",
+        lineNumbers: true,
+        lineWrapping: true,
+        tabSize: 2,
+        autoCloseBrackets: true,
+        matchBrackets: true,
+      });
 
-        editorEl.CodeMirror = editor;
-        saveEventsToLocalStorage();
+      editor.on("change", saveEventsToLocalStorage);
+      wrapper.querySelector(".event-name").addEventListener("input", saveEventsToLocalStorage);
+
+      wrapper.querySelector(".json-editor").CodeMirror = editor;
+      saveEventsToLocalStorage();
+    }
+
+    function emitThisEvent(btn) {
+      const block = btn.closest(".event-block");
+      const eventName = block.querySelector(".event-name").value;
+      const payloadText = block.querySelector(".json-editor").CodeMirror.getValue();
+
+      try {
+        const payload = JSON.parse(payloadText);
+        socket.emit(eventName, payload);
+        log(`📤 ${eventName}: ${JSON.stringify(payload)}`);
+      } catch (err) {
+        log(`❗ Erro no JSON: ${err.message}`);
       }
+    }
 
-      function emitThisEvent(btn) {
-        const block = btn.closest(".event-block");
-        const eventName = block.querySelector(".event-name").value;
-        const editor = block.querySelector(".json-editor").CodeMirror;
-        const payloadText = editor.getValue();
+    function removeEvent(btn) {
+      btn.closest(".event-block").remove();
+      saveEventsToLocalStorage();
+    }
 
+    window.onload = () => {
+      const saved = localStorage.getItem("socketio_events");
+      if (saved) {
         try {
-          const payload = JSON.parse(payloadText);
-          socket.emit(eventName, payload);
-          log(`📤 Emitido -> ${eventName}: ${JSON.stringify(payload)}`);
-        } catch (err) {
-          log(`❗ JSON inválido: ${err.message}`);
-        }
-      }
-
-      function removeEvent(btn) {
-        const block = btn.closest(".event-block");
-        block.remove();
-        saveEventsToLocalStorage();
-      }
-
-      window.onload = () => {
-        const saved = localStorage.getItem("socketio_events");
-        if (saved) {
-          try {
-            const events = JSON.parse(saved);
-            events.forEach((ev) => addEvent(ev.name, ev.payload));
-          } catch (err) {
-            log("⚠️ Erro ao carregar eventos salvos.");
-            addEvent();
-          }
-        } else {
+          const events = JSON.parse(saved);
+          events.forEach(ev => addEvent(ev.name, ev.payload));
+        } catch {
           addEvent();
         }
-      };
-    </script>
-  </body>
+      } else {
+        addEvent();
+      }
+    };
+  </script>
+</body>
 </html>
