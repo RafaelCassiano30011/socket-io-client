@@ -43,7 +43,7 @@ export function addEvent(name = "", payload = '{ "texto": "teste" }') {
   `;
 
   wrapper.querySelector(".emit-event", (e) => emitThisEvent(e.target));
-  wrapper.querySelector(".remvoe-event", (e) => removeEvent(e.target));
+  wrapper.querySelector(".remove-event", (e) => removeEvent(e.target));
 
   document.getElementById("events").appendChild(wrapper);
 
