@@ -1,0 +1,56 @@
+body {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+.CodeMirror {
+  height: auto;
+  background: #1e293b;
+  color: #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.btn {
+  transition: transform 0.2s ease;
+}
+
+.btn:hover {
+  transform: scale(1.05);
+}
+
+/* Estilos para o log */
+#log {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.875rem;
+  color: #86efac;
+  background-color: #1e293b;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #374151;
+  height: 300px;
+  overflow-y: auto;
+}
+
+.log-entry {
+  padding: 0.5rem;
+  margin: 0.25rem 0;
+  border-radius: 0.25rem;
+}
+
+.log-entry.event {
+  background-color: #2d3748;
+}
+
+.log-entry.error {
+  background-color: #9b2c2c;
+}
+
+.log-entry.success {
+  background-color: #2d6a4f;
+}
+
+.log-entry.warning {
+  background-color: #eab308;
+  color: #000;
+} 
